@@ -2520,25 +2520,6 @@ static ssize_t blink_store(struct device *dev,
 	return count;
 }
 
-static ssize_t rzr_user_store(struct device *dev,
-	struct device_attribute *attr,
-	const char *buf, size_t size)
-{
-	struct led_classdev *led_cdev = dev_get_drvdata(dev);
-	unsigned long state;
-	ssize_t ret = -EINVAL;
-
-	ret = kstrtoul(buf, 10, &state);
-	if (ret)
-		return ret;
-
-	if (state == LED_OFF)
-		led_trigger_remove(led_cdev);
-	__led_set_brightness(led_cdev, state);
-
-	return size;
-}
-
 static DEVICE_ATTR(led_mode, 0664, NULL, led_mode_store);
 static DEVICE_ATTR(strobe, 0664, NULL, led_strobe_type_store);
 static DEVICE_ATTR(pwm_us, 0664, NULL, pwm_us_store);
@@ -2549,7 +2530,6 @@ static DEVICE_ATTR(ramp_step_ms, 0664, NULL, ramp_step_ms_store);
 static DEVICE_ATTR(lut_flags, 0664, NULL, lut_flags_store);
 static DEVICE_ATTR(duty_pcts, 0664, NULL, duty_pcts_store);
 static DEVICE_ATTR(blink, 0664, NULL, blink_store);
-static DEVICE_ATTR(user, 0600, NULL, rzr_user_store);
 
 static struct attribute *led_attrs[] = {
 	&dev_attr_led_mode.attr,
@@ -2591,15 +2571,6 @@ static const struct attribute_group lpg_attr_group = {
 
 static const struct attribute_group blink_attr_group = {
 	.attrs = blink_attrs,
-};
-
-static struct attribute *rzr_user_attrs[] = {
-	&dev_attr_user.attr,
-	NULL,
-};
-
-static const struct attribute_group rzr_user_attr_group = {
-	.attrs = rzr_user_attrs,
 };
 
 
@@ -3856,13 +3827,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			goto fail_id_check;
 		}
 
-		if (0 == strncmp(led->cdev.name, "pearlyn", 7)) {
-             		razer_led_setdev(&led->cdev);
-			rc = sysfs_create_group(&led->cdev.dev->kobj,
-				&rzr_user_attr_group);
-			if (rc)
-				goto fail_id_check;
-		}
 
 		if (led->id == QPNP_ID_FLASH1_LED0 ||
 			led->id == QPNP_ID_FLASH1_LED1) {
@@ -3985,11 +3949,7 @@ static int qpnp_leds_remove(struct spmi_device *spmi)
 		cancel_work_sync(&led_array[i].work);
 		mutex_destroy(&led_array[i].lock);
 		led_classdev_unregister(&led_array[i].cdev);
-		if (0 == strncmp(led_array[i].cdev.name, "pearlyn", 7)) {
-		        razer_led_setdev(NULL);
-			sysfs_remove_group(&led_array[i].cdev.dev->kobj,
-							&rzr_user_attr_group);
-		}
+
 		switch (led_array[i].id) {
 		case QPNP_ID_WLED:
 			break;

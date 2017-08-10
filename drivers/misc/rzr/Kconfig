@@ -3,11 +3,6 @@ config RZR_DEVMODE
 	depends on ARCH_APQ8084
 	default n
 
-config RZR_LED
-	bool "Razer Led"
-	depends on ARCH_APQ8084
-	default n
-
 config RZR_FILTER
 	bool "Razer Filter"
 	depends on ARCH_APQ8084
