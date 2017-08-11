@@ -7,8 +7,3 @@ config RZR_FILTER
 	bool "Razer Filter"
 	depends on ARCH_APQ8084
 	default n
-
-config RZR_HDMI_EDID
-	bool "Razer HDMI EDID"
-	depends on ARCH_APQ8084
-	default n
